@@ -2,24 +2,65 @@ using UnityEngine;
 
 public abstract class Enemy : MonoBehaviour
 {
+    [SerializeField] protected float timeToRevive;
+    [SerializeField] protected float timeToDisable;
+    [SerializeField] protected float movementSpeedTime;
     [SerializeField] private int health;
-    [SerializeField] private int points;
 
-    protected void TakeDamage(int damage)
+    [SerializeField] protected Transform[] waypoints;
+
+    protected Animator animator;
+    protected BoxCollider2D boxCollider;
+    protected SpriteRenderer sprite;
+
+    protected int waypointIndex = 0;
+    protected bool isDisabled;
+    protected bool isDead;
+
+    protected void Awake()
     {
-        health--;
-        if (health <= 0)
+        animator = GetComponent<Animator>();
+        boxCollider = GetComponent<BoxCollider2D>();
+        sprite = GetComponentInChildren<SpriteRenderer>();
+    }
+
+    protected virtual void Start()
+    {
+        if (waypoints.Length > 0)
         {
-            Death();
+            Move();
         }
+    }
+
+    private void Update()
+    {
+    }
+
+    public void TakeDamage(int damage)
+    {
+        if (!isDisabled && !isDead)
+        {
+            health--;
+            if (health <= 0)
+            {
+                Death();
+            } 
+        }
+    }
+
+    protected virtual void Move()
+    {
+
     }
 
     protected void OnTriggerEnter2D(Collider2D collision)
     {
         if (collision.CompareTag("Bullet"))
         {
-            TakeDamage(1);
-            Destroy(collision.gameObject);
+            if (collision.GetComponent<Bullet>().BulleLife == 1)
+            {
+                ScoreManager.Instance.IncreaseScore(5);
+            }
         }
     }
 
@@ -27,8 +68,11 @@ public abstract class Enemy : MonoBehaviour
     {
 
     }
-    protected void Death()
+
+    protected virtual void Death()
     {
-        print("Enemy is Dead");
+        isDead = true;
+        animator.SetBool("isDead", isDead);
+        boxCollider.enabled = false;
     }
 }

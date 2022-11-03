@@ -21,14 +21,6 @@ public class PlayerController : MonoBehaviour
     private bool mGrounded;
     private bool mRising;
 
-    // Invincibility timer
-    private float kInvincibilityDuration = 1.0f;
-    private float mInvincibleTimer;
-    private bool mInvincible;
-
-    // Damage effects
-    private float kDamagePushForce = 2.5f;
-
     // Wall kicking
     private bool mAllowWallKick;
     private Vector2 mFacingDirection;
@@ -39,7 +31,6 @@ public class PlayerController : MonoBehaviour
     private GroundCheck mGroundCheck;
 
     // Reference to audio sources
-    private AudioSource mLandingSound;
     private AudioSource mWallKickSound;
     private AudioSource mTakeDamageSound;
 
@@ -89,17 +80,6 @@ public class PlayerController : MonoBehaviour
                     armPivot.localRotation = Quaternion.Euler(0.0f, 180.0f, rotationZ - 90.0f);
                 }
             }
-            else if (transform.eulerAngles.y == 180)
-            {
-                if (mFacingDirection == Vector2.right)
-                {
-                    armPivot.localRotation = Quaternion.Euler(180.0f, 180.0f, -rotationZ - 90.0f);
-                }
-                else
-                {
-                    armPivot.localRotation = Quaternion.Euler(180.0f, 0.0f, rotationZ - 90.0f);
-                }
-            }
         }
 
         //float horizontalInput = Input.GetAxis("Horizontal");
@@ -126,13 +106,10 @@ public class PlayerController : MonoBehaviour
             GameObject bullet = Instantiate(bulletPrebab, shootPoint.position, Quaternion.LookRotation(armPivot.forward, armPivot.up));
             bullet.transform.rotation = Quaternion.Euler(0.0f, bullet.transform.eulerAngles.y, bullet.transform.eulerAngles.z - 90.0f);
             bullet.GetComponent<Bullet>().SetDirection(shootPoint.forward);
-        };
+        }
 
         bool grounded = CheckGrounded();
-        if (!mGrounded && grounded)
-        {
-            //mLandingSound.Play();
-        }
+
         mGrounded = grounded;
 
         if (mGrounded && Input.GetButtonDown("Jump"))
@@ -179,6 +156,5 @@ public class PlayerController : MonoBehaviour
         mAnimator.SetBool("bIsWalking", mRunning);
         mAnimator.SetBool("isGrounded", mGrounded);
         mAnimator.SetBool("isRising", mRising);
-        mAnimator.SetBool("isHurt", mInvincible);
     }
 }
