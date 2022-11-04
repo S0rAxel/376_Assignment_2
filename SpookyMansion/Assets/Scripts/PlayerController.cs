@@ -1,5 +1,5 @@
 using UnityEngine;
-using System.Collections.Generic;
+using DG.Tweening;
 
 public class PlayerController : MonoBehaviour
 {
@@ -14,12 +14,19 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private float mJumpForce;
     [SerializeField] private LayerMask mWhatIsGround;
 
+    [SerializeField] private int healthPoints = 3;
+
     private float kGroundCheckRadius = 0.1f;
+    private float kDamagePushForce = 5.0f;
+    private float kInvincibilityDuration = 1.0f;
+    private float mInvincibleTimer;
 
     // Animator booleans
     private bool mRunning;
     private bool mGrounded;
     private bool mRising;
+    private bool mInvincible;
+
 
     // Wall kicking
     private bool mAllowWallKick;
@@ -37,12 +44,16 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private GameObject mDeathParticleEmitter;
     //[SerializeField] private LifeMeter life;
 
+    private SpriteRenderer[] sprites;
+
     void Start()
     {
         // Get references to other components and game objects
         mAnimator = GetComponent<Animator>();
         mRigidBody2D = GetComponent<Rigidbody2D>();
         mGroundCheck = GetComponentInChildren<GroundCheck>();
+
+        sprites = GetComponentsInChildren<SpriteRenderer>();
 
         //// Get audio references
         //AudioSource[] audioSources = GetComponents<AudioSource>();
@@ -53,6 +64,32 @@ public class PlayerController : MonoBehaviour
         mFacingDirection = Vector2.right;
     }
 
+    public void TakeDamage(int damage)
+    {
+        if (!mInvincible)
+        {
+
+            foreach (SpriteRenderer sRenderer in sprites)
+            {
+                sRenderer.DOColor(Color.red, 0.1f).SetLoops(4, LoopType.Yoyo);
+            }
+
+            Vector2 forceDirection = new Vector2(-mFacingDirection.x, 1.0f) * kDamagePushForce;
+            mRigidBody2D.velocity = Vector2.zero;
+            mRigidBody2D.AddForce(forceDirection, ForceMode2D.Impulse);
+            mInvincible = true;
+            //mTakeDamageSound.Play();
+
+            healthPoints -= damage;
+
+            //foreach (SpriteRenderer sRenderer in sprites) sRenderer.color = Color.white;
+            if (healthPoints == 0)
+            {
+                Death();
+            }
+        }
+
+    }
 
     private void Update()
     {
@@ -125,6 +162,16 @@ public class PlayerController : MonoBehaviour
 
         mRising = mRigidBody2D.velocity.y > 0.0f;
         UpdateAnimator();
+
+        if (mInvincible)
+        {
+            mInvincibleTimer += Time.deltaTime;
+            if (mInvincibleTimer >= kInvincibilityDuration)
+            {
+                mInvincible = false;
+                mInvincibleTimer = 0.0f;
+            }
+        }
     }
 
     private bool CheckGrounded()
@@ -149,6 +196,11 @@ public class PlayerController : MonoBehaviour
             Vector3 newScale = new Vector3(-Mathf.Abs(transform.localScale.x), transform.localScale.y, transform.localScale.z);
             transform.localScale = newScale;
         }
+    }
+
+    private void Death()
+    {
+
     }
 
     private void UpdateAnimator()

@@ -4,17 +4,33 @@ using DG.Tweening;
 
 public class Zombie : Enemy
 {
+    protected bool isDisabled;
+
     protected override void Start()
     {
         base.Start();
         StartCoroutine(ToDisable());
     }
 
+    public override void TakeDamage(int damage)
+    {
+        if (!isDisabled && !isDead)
+        {
+            health--;
+            if (health <= 0)
+            {
+                Death();
+            }
+        }
+    }
+
     private IEnumerator ToDisable()
     {
+        print("Waiting on Disabled");
         yield return new WaitForSeconds(timeToDisable);
+        print("Wait ended");
 
-        animator.SetBool("isDisable", false);
+        animator.SetBool("isDisable", true);
 
         yield return new WaitForSeconds(0.5f);
 
@@ -32,9 +48,8 @@ public class Zombie : Enemy
         animator.SetBool("isDead", false);
 
         yield return new WaitForSeconds(2.0f);
-        
-        boxCollider.enabled = true;
-        isDead = false;
+
+        base.Spawn();
         isDisabled = false;
 
         StartCoroutine(ToDisable());
@@ -60,7 +75,9 @@ public class Zombie : Enemy
     protected override void Death()
     {
         base.Death();
+        StopAllCoroutines();
         ScoreManager.Instance.IncreaseScore(Random.Range(1, 4));
+        StartCoroutine(ToRespawn());
     }
 
 }

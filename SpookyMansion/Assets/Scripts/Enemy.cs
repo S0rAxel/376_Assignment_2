@@ -5,7 +5,9 @@ public abstract class Enemy : MonoBehaviour
     [SerializeField] protected float timeToRevive;
     [SerializeField] protected float timeToDisable;
     [SerializeField] protected float movementSpeedTime;
-    [SerializeField] private int health;
+    [SerializeField] protected int health;
+
+    protected int maxHealth;
 
     [SerializeField] protected Transform[] waypoints;
 
@@ -14,7 +16,6 @@ public abstract class Enemy : MonoBehaviour
     protected SpriteRenderer sprite;
 
     protected int waypointIndex = 0;
-    protected bool isDisabled;
     protected bool isDead;
 
     protected void Awake()
@@ -22,6 +23,8 @@ public abstract class Enemy : MonoBehaviour
         animator = GetComponent<Animator>();
         boxCollider = GetComponent<BoxCollider2D>();
         sprite = GetComponentInChildren<SpriteRenderer>();
+
+        maxHealth = health;
     }
 
     protected virtual void Start()
@@ -36,9 +39,9 @@ public abstract class Enemy : MonoBehaviour
     {
     }
 
-    public void TakeDamage(int damage)
+    public virtual void TakeDamage(int damage)
     {
-        if (!isDisabled && !isDead)
+        if (!isDead)
         {
             health--;
             if (health <= 0)
@@ -62,11 +65,18 @@ public abstract class Enemy : MonoBehaviour
                 ScoreManager.Instance.IncreaseScore(5);
             }
         }
+
+        if (collision.CompareTag("Player"))
+        {
+            collision.GetComponent<PlayerController>().TakeDamage(1);
+        }
     }
 
     public void Spawn()
     {
-
+        health = maxHealth;
+        boxCollider.enabled = true;
+        isDead = false;
     }
 
     protected virtual void Death()
